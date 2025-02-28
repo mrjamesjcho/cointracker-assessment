@@ -1,0 +1,64 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Transaction {
+  id          String   @id @default(cuid())
+  txid        String   @unique
+  txIndex     BigInt
+  blockHeight Int
+  blockIndex  BigInt?
+  time        DateTime
+  fee         Int
+  size        Int
+  weight      Int
+  lockTime    Int
+  doubleSpend Boolean
+  addressId   String
+  Inputs      Input[]
+  Outputs     Output[]
+  Address     Address  @relation(fields: [addressId], references: [id])
+}
+
+model Input {
+  id            String      @id @default(cuid())
+  address       String
+  value         BigInt
+  prevTxIndex   BigInt
+  n             Int
+  transactionId String
+  addressId     String
+  Transaction   Transaction @relation(fields: [transactionId], references: [id])
+  Address       Address     @relation(fields: [addressId], references: [id])
+}
+
+model Output {
+  id            String      @id @default(cuid())
+  address       String
+  value         BigInt
+  spent         Boolean
+  n             Int
+  transactionId String
+  addressId     String
+  Transaction   Transaction @relation(fields: [transactionId], references: [id])
+  Address       Address     @relation(fields: [addressId], references: [id])
+}
+
+model Address {
+  id           String        @id @default(cuid())
+  address      String        @unique
+  Transactions Transaction[]
+  Inputs       Input[]
+  Outputs      Output[]
+}
