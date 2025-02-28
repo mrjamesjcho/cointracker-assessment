@@ -1,6 +1,15 @@
 import { ApolloServer } from "@apollo/server";
-import { startStandaloneServer } from "@apollo/server/standalone";
-import resolvers from "./resolvers";
+import { expressMiddleware } from "@apollo/server/express4";
+import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
+import cors from "cors";
+import express from "express";
+import http from "http";
+import resolvers from "./resolvers.js";
+
+BigInt.prototype["toJSON"] = function () {
+  const int = Number.parseInt(this.toString());
+  return int ?? this.toString();
+};
 
 // A schema is a collection of type definitions (hence "typeDefs")
 // that together define the "shape" of queries that are executed against
@@ -11,9 +20,7 @@ const typeDefs = `#graphql
 type Address {
   id: ID!
   address: String!
-  transactions: [Transaction!]
-  inputs: [Input!]
-  outputs: [Output!]
+  Transactions: [Transaction!]
 }
 
 type Transaction {
@@ -28,9 +35,9 @@ type Transaction {
   weight: Int!
   lockTime: Int!
   doubleSpend: Boolean!
-  inputs: [Input!]
-  outputs: [Output!]
-  addresses: [Address!]
+  Inputs: [Input!]
+  Outputs: [Output!]
+  Address: Address!
 }
 
 type Input {
@@ -39,7 +46,7 @@ type Input {
   value: BigInt!
   prevTxIndex: BigInt!
   n: Int!
-  transaction: Transaction!
+  Transaction: Transaction!
 }
 
 type Output {
@@ -48,37 +55,46 @@ type Output {
   value: BigInt!
   spent: Boolean!
   n: Int!
-  transaction: Transaction!
+  Transaction: Transaction!
 }
 
 scalar BigInt
 scalar DateTime
 
 type Query {
-  getAddress(): [Address!]
-  getAddress(address: String!): Address
-  getTransactions(address: String!): [Transaction!]
+  getAddress(addressId: String!): Address
+  getAllAddresses: [Address!]
+  getTransactions(addressId: String!): [Transaction!]
 }
 
 type Mutation {
   addAddress(address: String!): Address
-  removeAddress(address: String!): Address
+  removeAddress(addressId: String!): Address
+  fetchAndAddTransactions(addressId: String!, address: String!): [Transaction!]
 }
 `;
 
-// The ApolloServer constructor requires two parameters: your schema
-// definition and your set of resolvers.
+const app = express();
+const httpServer = http.createServer(app);
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
 });
 
-// Passing an ApolloServer instance to the `startStandaloneServer` function:
-//  1. creates an Express app
-//  2. installs your ApolloServer instance as middleware
-//  3. prepares your app to handle incoming requests
-const { url } = await startStandaloneServer(server, {
-  listen: { port: 4000 },
-});
+await server.start();
 
-console.log(`🚀  Server ready at: ${url}`);
+app.use(
+  "/graphql",
+  cors<cors.CorsRequest>({
+    origin: ["http://localhost:3000"],
+    credentials: true,
+  }),
+  express.json(),
+  expressMiddleware(server)
+);
+
+await new Promise<void>((resolve) =>
+  httpServer.listen({ port: 4000 }, resolve)
+);
+console.log(`🚀  Server ready at: http://localhost:4000/graphql`);

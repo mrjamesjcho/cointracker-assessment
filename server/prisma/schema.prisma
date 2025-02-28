@@ -38,9 +38,7 @@ model Input {
   prevTxIndex   BigInt
   n             Int
   transactionId String
-  addressId     String
   Transaction   Transaction @relation(fields: [transactionId], references: [id])
-  Address       Address     @relation(fields: [addressId], references: [id])
 }
 
 model Output {
@@ -50,15 +48,11 @@ model Output {
   spent         Boolean
   n             Int
   transactionId String
-  addressId     String
   Transaction   Transaction @relation(fields: [transactionId], references: [id])
-  Address       Address     @relation(fields: [addressId], references: [id])
 }
 
 model Address {
   id           String        @id @default(cuid())
   address      String        @unique
   Transactions Transaction[]
-  Inputs       Input[]
-  Outputs      Output[]
 }
