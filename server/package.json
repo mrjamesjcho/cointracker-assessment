@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "compile": "tsc",
-    "start": "npm run compile && node ./dist/index.js"
+    "start": "npm run compile && node ./dist/index.js",
+    "db:start": "docker compose up -d",
+    "db:stop": "docker compose down"
   },
   "keywords": [],
   "author": "",
