@@ -16,21 +16,95 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## UI Specification for Bitcoin Wallet App
 
-## Learn More
+### Overview
 
-To learn more about Next.js, take a look at the following resources:
+The Bitcoin Wallet app is built with Next.js and Apollo Client, providing an interface to manage and view Bitcoin addresses and their associated transactions. The app consists of two main pages: the wallet overview and the transaction history for a specific address.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Pages
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+#### Home (Main Page)
 
-## Deploy on Vercel
+- **URL:** `/`
+- **Components:**
+  - `Addresses`
+- **UI Elements:**
+  - Header with the title "Bitcoin Wallet".
+  - Address input field with a button to add a new address.
+  - List of added addresses, clickable to view transactions.
+  - Loading and error states for address fetching and adding.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+#### Address Transactions Page
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **URL:** `/{address}?id={addressId}`
+- **Components:**
+  - `Transactions`
+- **UI Elements:**
+  - Header with the title "Address Transactions".
+  - List of transactions with details:
+    - Transaction ID
+    - Date and time
+    - Fee (in Satoshis)
+    - Inputs (from addresses and values)
+    - Outputs (to addresses and values)
+    - Net change for the address
+  - Loading and error states for transaction fetching.
+  - Display of current balance, number of transactions, and total received amount (fetched from an external API).
+
+### Components
+
+#### `Addresses`
+
+- **Description:** Manages the display and addition of Bitcoin addresses.
+- **State:**
+  - `addresses`: List of current addresses.
+  - `newAddress`: Address string to be added.
+- **API Operations:**
+  - Query: `getAllAddresses`
+  - Mutation: `addAddress`, `fetchAndAddTransactions`
+- **UI Behavior:**
+  - On adding an address, immediately fetch and sync transactions.
+  - Navigate to the transaction page on address click.
+
+#### `Transactions`
+
+- **Description:** Displays transaction details for a specific address.
+- **State:**
+  - `balance`: Current balance, number of transactions, and total received.
+- **API Operations:**
+  - Query: `getTransactions`
+  - External API call for address balance.
+- **UI Behavior:**
+  - Show loading and error states.
+  - Calculate and display net change in balance per transaction.
+
+### User Flows
+
+1. **Add Address:**
+
+   - User enters an address and clicks "Add".
+   - The app adds the address and syncs transactions.
+   - The new address appears in the list.
+
+2. **View Transactions:**
+
+   - User clicks an address.
+   - The app navigates to the transaction page and fetches transactions.
+   - The app shows the transaction list and address balance.
+
+3. **Transaction Details:**
+
+   - User views transaction details, including inputs and outputs.
+   - The app shows net balance change for the address.
+
+### Error Handling
+
+- Address and transaction loading errors display appropriate messages.
+- Handle empty states with fallback text (e.g., "No addresses added", "No transactions found").
+
+### Styling
+
+- Tailwind CSS for styling.
